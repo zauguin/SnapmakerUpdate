@@ -6,6 +6,8 @@
 #include <string_view>
 #include <iostream>
 #include <fstream>
+#include <optional>
+
 #if __has_include(<format>)
 #include <format>
 constexpr auto operator ""_format(const char *str, std::size_t len) {
@@ -178,7 +180,7 @@ std::span<char> serialize(const Update &update, std::span<char> buffer) {
     offset += update.controller->size();
   }
   if (update.screen) {
-    header.entries.push_back(Header::Entry(Header::Type::Screen, offset, update.screen->size()));
+    header.entries.push_back(Header::Entry(Header::Type::Screen,  offset, update.screen->size()));
     offset += update.screen->size();
   }
   if (buffer.size() < offset)

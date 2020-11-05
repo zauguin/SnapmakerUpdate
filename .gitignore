@@ -1,2 +1,22 @@
 /package
 /update
+vc140.pdb
+.vs/slnx.sqlite
+.vs/VSWorkspaceState.json
+.vs/SnapmakerUpdate/v16/.suo
+FW Archive/Snapmaker2_V1.10.1.bin
+FW Extract/controller.bin.packet
+FW Extract/module0.bin.packet
+FW Extract/screen.apk
+FW Extract/Snapmaker2_V1.10.1.bin
+FW Extract/update.exe
+Test/1 FW Extract/controller.bin.packet
+Test/1 FW Extract/module0.bin.packet
+Test/1 FW Extract/screen.apk
+Test/1 FW Extract/Snapmaker2_V1.10.1.bin
+Test/1 FW Extract/update.exe
+Test/2 Rebuild/controller.bin.packet
+Test/2 Rebuild/module0.bin.packet
+Test/2 Rebuild/screen.apk
+Test/2 Rebuild/Snapmaker_FW.bin
+Test/2 Rebuild/update.exe
