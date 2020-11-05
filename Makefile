@@ -1,5 +1,5 @@
 CXXFLAGS += -std=c++20 -Wall -D_DEFAULT_SOURCE
-.PHONY: obj cleanobj clean
+.PHONY: all obj cleanobj clean
 all: obj package update
 obj: cleanobj
 	mkdir obj
