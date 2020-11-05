@@ -1,5 +1,6 @@
 .vs
 .vscode/settings.json
+obj
 FW Archive
 Test
 *.exe
