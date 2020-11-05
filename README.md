@@ -20,11 +20,12 @@ shell. For other platforms, the instructions should be relativly easy to adapt.
 
 ## Compiling
 
-You need a C++ compiler with basic support for C++20 and [libfmt](https://github.com/fmtlib/fmt)
-installed on your system to compile these tools.
-(This last requirement does not apply if your C++ compiler supports C++20 completely, especially `std::format`.)
+Requirements, modified for Windows:
 
-Run `make` in the directory containing the source files from this repository to compile.
+(Cygwin with gcc-g++, version 10)[https://www.cygwin.com/setup-x86_64.exe]
+(GnuMake32)[https://sourceforge.net/projects/gnuwin32/files/make/3.81/make-3.81.exe/download?use_mirror=newcontinuum&download=]
+
+Run `make all` in the directory containing the source files from this repository to compile.
 
 ## Example usage
 
