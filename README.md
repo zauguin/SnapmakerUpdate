@@ -22,8 +22,8 @@ shell. For other platforms, the instructions should be relativly easy to adapt.
 
 Requirements, modified for Windows:
 
-[Cygwin with gcc-g++, version 10](https://www.cygwin.com/setup-x86_64.exe)
-[GnuMake32](https://sourceforge.net/projects/gnuwin32/files/make/3.81/make-3.81.exe/download?use_mirror=newcontinuum&download=)
+* [Cygwin with gcc-g++, version 10](https://www.cygwin.com/setup-x86_64.exe)
+* [GnuMake32](https://sourceforge.net/projects/gnuwin32/files/make/3.81/make-3.81.exe/download?use_mirror=newcontinuum&download=)
 
 Run `make all` in the directory containing the source files from this repository to compile.
 
