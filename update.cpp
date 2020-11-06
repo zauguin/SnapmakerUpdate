@@ -22,7 +22,7 @@ constexpr auto operator ""_format(const char *str, std::size_t len) {
   };
 }
 #endif
-#include <arpa/inet.h>
+#include "endian-helper.h"
 
 using namespace std::literals::string_view_literals;
 using namespace fmt;
@@ -58,7 +58,7 @@ Header parseHeader(std::span<const char> buffer) {
   if(buffer.size() < headerSize(0))
     throw "Buffer too small to contain header";
   auto iter = buffer.begin();
-  std::uint16_t length = ntohs(*(std::uint16_t*)&*iter);
+  std::uint16_t length = be16toh(*(std::uint16_t*)&*iter);
   if(length > buffer.size())
     throw "Header length exceeds buffer size";
   iter += 2; length -= 2;
@@ -73,7 +73,7 @@ Header parseHeader(std::span<const char> buffer) {
   }();
   iter += 32; length -= 32;
 
-  header.flags = ntohl(*(std::uint32_t*)&*iter);
+  header.flags = be32toh(*(std::uint32_t*)&*iter);
   iter += 4; length -= 4;
 
   header.entries.resize(*iter);
@@ -83,9 +83,9 @@ Header parseHeader(std::span<const char> buffer) {
   for (Header::Entry &entry : header.entries) {
     entry.type = Header::Type(*iter);
     iter += 1;
-    entry.offset = ntohl(*(std::uint32_t*)&*iter);
+    entry.offset = be32toh(*(std::uint32_t*)&*iter);
     iter += 4; length -= 4;
-    entry.size = ntohl(*(std::uint32_t*)&*iter);
+    entry.size = be32toh(*(std::uint32_t*)&*iter);
     iter += 4; length -= 4;
   }
   return header;
@@ -143,23 +143,23 @@ std::span<char> serialize(const Header &header, std::span<char> buffer) {
     throw "Version too long";
   if (header.entries.size() >= 0x100)
     throw "Too many entries in update header";
-  *reinterpret_cast<std::uint16_t*>(buffer.data()) = htons(header_size);
+  *reinterpret_cast<std::uint16_t*>(buffer.data()) = htobe16(header_size);
   buffer = buffer.subspan<2>();
   std::fill(
       std::copy(header.version.begin(), header.version.end(), buffer.begin()),
       buffer.begin() + 32,
       0);
   buffer = buffer.subspan<32>();
-  *reinterpret_cast<std::uint32_t*>(buffer.data()) = htonl(header.flags);
+  *reinterpret_cast<std::uint32_t*>(buffer.data()) = htobe32(header.flags);
   buffer = buffer.subspan<4>();
   buffer.front() = header.entries.size();
   buffer = buffer.subspan<1>();
   for (auto &&entry : header.entries) {
     buffer.front() = (char)entry.type;
     buffer = buffer.subspan<1>();
-    *reinterpret_cast<std::uint32_t*>(buffer.data()) = htonl(entry.offset);
+    *reinterpret_cast<std::uint32_t*>(buffer.data()) = htobe32(entry.offset);
     buffer = buffer.subspan<4>();
-    *reinterpret_cast<std::uint32_t*>(buffer.data()) = htonl(entry.size);
+    *reinterpret_cast<std::uint32_t*>(buffer.data()) = htobe32(entry.size);
     buffer = buffer.subspan<4>();
   }
   return buffer;

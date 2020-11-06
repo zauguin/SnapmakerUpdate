@@ -5,6 +5,7 @@ ifeq ($(OS),Windows_NT)
 EXE_EXTENSION = .exe
 %: %.exe
 	:
+LDLIBS += $(WINDIR)\system32\ws2_32.dll
 else
 EXE_EXTENSION =
 endif
@@ -18,6 +19,6 @@ EXECS := $(addsuffix $(EXE_EXTENSION),$(EXECS))
 .PHONY: all clean
 CXX = g++
 all: $(EXECS)
-update$(EXE_EXTENSION): update.cpp -lfmt
+update$(EXE_EXTENSION): LDLIBS += -lfmt
 clean:
 	-rm $(EXECS)

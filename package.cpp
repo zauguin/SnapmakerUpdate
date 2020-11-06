@@ -5,19 +5,7 @@
 #include <numeric>
 #include <string_view>
 
-#if __has_include(<endian.h>)
-#include <endian.h>
-#else
-#if __has_include(<arpa/inet.h>)
-#include <arpa/inet.h>
-#elif __has_include(<winsock2.h>)
-#include <winsock2.h>
-#else
-#error "htons is not available on your system"
-#endif
-#define htobe16(x) htons(x)
-#define htole32(x) std::uint32_t(x)
-#endif
+#include "endian-helper.h"
 
 using namespace std::literals;
 
@@ -40,7 +28,7 @@ int main(int argc, char const* argv[])
     flags = 0;
 
   if (argc <= 2) {
-    std::cerr << "Invalid usage. You need something like './package controller Snapmaker_Vx.y.z 0 20'\n";
+    std::cerr << "Invalid usage. You need something like './package controller Snapmaker_Vx.y.z'\n";
     return 1;
   }
   char header[2048] = {};
@@ -74,7 +62,7 @@ int main(int argc, char const* argv[])
 
   std::ostringstream sstr;
   sstr << std::cin.rdbuf();
-  auto content = std::move(sstr.str());
+  auto content = sstr.str();
   *reinterpret_cast<std::uint32_t*>(header + 40) = htole32(content.size()); // No, this does not have to be in big endian. Yes, I appreciate the consistency too...
   *reinterpret_cast<std::uint32_t*>(header + 44) = htole32(std::accumulate((std::uint8_t*)content.data(), (std::uint8_t*)content.data() + content.size(), std::uint32_t(0)));
   *reinterpret_cast<std::uint32_t*>(header + 48) = htole32(flags);
