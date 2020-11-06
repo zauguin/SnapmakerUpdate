@@ -1,3 +1,23 @@
-CXXFLAGS += -std=c++20 -Wall
-all: package update
-update: update.cpp -lfmt
+all:
+CXXFLAGS += -std=c++20 -Wall -D_DEFAULT_SOURCE
+
+ifeq ($(OS),Windows_NT)
+EXE_EXTENSION = .exe
+%: %.exe
+	:
+else
+EXE_EXTENSION =
+endif
+
+%$(EXE_EXTENSION): %.cpp
+	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
+
+EXECS = package update
+EXECS := $(addsuffix $(EXE_EXTENSION),$(EXECS))
+
+.PHONY: all clean
+CXX = g++
+all: $(EXECS)
+update$(EXE_EXTENSION): update.cpp -lfmt
+clean:
+	-rm $(EXECS)
