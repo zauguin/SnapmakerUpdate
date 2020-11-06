@@ -92,16 +92,19 @@ arguments:
     public, I'll send you a PR to fix this). Given that you will almost always pass
     `0 20`, this combination has been made the default and can be omitted.
 
-The to be wrapped firmware image is read from standard input, the wrapped image
-is written to standard output. So we run
+The to be wrapped firmware image is read from standard input or the file specified
+with `--input=`, the wrapped image is written to standard output or to the file
+specified with `--output`. So we run
 
-    $TOOLS/package --flag controller Snapmaker_V3.2.2_MK1 \
-      < $MARLIN/.pioenvs/GD32F105/firmware.bin > controller_new.bin.packet
+    $TOOLS/package --input=$MARLIN/.pioenvs/GD32F105/firmware.bin \
+      --output=controller_new.bin.packet                          \
+      --flag controller Snapmaker_V3.2.2_MK1
 
 (you would get exactly the same result when using
 
-    $TOOLS/package --flag controller Snapmaker_V3.2.2_MK1 0 20 \
-      < $MARLIN/.pioenvs/GD32F105/firmware.bin > controller_new.bin.packet
+    $TOOLS/package --input=$MARLIN/.pioenvs/GD32F105/firmware.bin \
+      --output=controller_new.bin.packet                          \
+      --flag controller Snapmaker_V3.2.2_MK1 0 20
 )
 
 Now we have the wrapped fimware in `controller_new.bin.packet`.
@@ -113,7 +116,7 @@ updates (yet) contain all three components, but I it's also possible to create
 "partial updates" e.g. only containing the controller firmware.
 Here we run
 
-    $TOOLS/update --force Snapmaker2_V1.10.1_20200821_MK1 controller_new.bin.packet > Snapmaker_FW.bin
+    $TOOLS/update --force --output=Snapmaker_FW.bin Snapmaker2_V1.10.1_20200821_MK1 controller_new.bin.packet
 
 Now you can copy Snapmaker_FW.bin to a Snapmaker2 printer and install it like
 any other update.
