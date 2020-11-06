@@ -44,7 +44,7 @@ struct Header {
 
 struct Update {
   std::string version;
-  std::uint32_t flags;
+  std::uint32_t flags = 0;
   std::optional<std::vector<char>> screen;
   std::optional<std::vector<char>> controller;
   std::vector<std::vector<char>> modules;
@@ -206,7 +206,7 @@ std::vector<char> serialize(const Update &update) {
 
 auto read_file(const char *filename) {
   std::vector<char> buffer(0x1000);
-  std::ifstream file(filename);
+  std::ifstream file(filename, std::ios_base::in | std::ios_base::binary);
   while(file.read(buffer.data() + (buffer.size() - 0x1000), 0x1000))
     buffer.resize(buffer.size() + 0x1000);
   buffer.resize(buffer.size() - 0x1000 + file.gcount());
@@ -214,7 +214,9 @@ auto read_file(const char *filename) {
 }
 
 void write_file(const char *filename, const std::vector<char> &data) {
-  std::ofstream file(filename);
+  std::ofstream file(filename, std::ios_base::out | std::ios_base::binary);
+  if (!file)
+    throw "Unable to open output file\n";
   file.write(data.data(), data.size());
 }
 
@@ -244,6 +246,21 @@ try {
     default:
       {
         Update update;
+        std::ofstream output;
+        while(argv[1]) {
+          std::string_view arg = argv[1];
+          if (arg == "--force"sv)
+            update.flags = 1;
+          else if (arg.starts_with("--output=")) {
+            arg.remove_prefix(sizeof("--output=")-1);
+            output.open(arg.data(), std::ios_base::out | std::ios_base::binary);
+            if (!output.is_open()) {
+              std::cerr << "Unable to open output file\n";
+              return 1;
+            }
+          } else break;
+          ++argv; --argc;
+        }
         if (argv[1] == "--force"sv) {
           update.flags = 1; ++argv; --argc;
           if (argc == 2) {
@@ -266,7 +283,8 @@ try {
             }
         }
         auto buffer = serialize(update);
-        std::cout.write(buffer.data(), buffer.size());
+
+        (output.is_open() ? output : std::cout).write(buffer.data(), buffer.size());
       }
   }
   return 0;

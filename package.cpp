@@ -1,3 +1,4 @@
+#include <ios>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -9,23 +10,32 @@
 
 using namespace std::literals;
 
-auto read_file(const char *filename) {
-  std::vector<char> buffer(0x1000);
-  std::ifstream file(filename);
-  while(file.read(buffer.data() + (buffer.size() - 0x1000), 0x1000))
-    buffer.resize(buffer.size() + 0x1000);
-  buffer.resize(buffer.size() - 0x1000 + file.gcount());
-  return buffer;
-}
-
 int main(int argc, char const* argv[])
 {
   std::uint32_t flags;
-  if (argv[1] && argv[1] == "--flag"sv) { // I have absolutely no idea what this flag is doing...
-    flags = 1;
+  std::ifstream input;
+  std::ofstream output;
+  while(argv[1]) {
+    std::string_view arg = argv[1];
+    if (arg == "--flag"sv)
+      flags = 1;
+    else if (arg.starts_with("--input=")) {
+      arg.remove_prefix(sizeof("--input=")-1);
+      input.open(arg.data(), std::ios_base::in | std::ios_base::binary);
+      if (!input.is_open()) {
+        std::cerr << "Unable to open input file\n";
+        return 1;
+      }
+    } else if (arg.starts_with("--output=")) {
+      arg.remove_prefix(sizeof("--output=")-1);
+      output.open(arg.data(), std::ios_base::out | std::ios_base::binary);
+      if (!output.is_open()) {
+        std::cerr << "Unable to open output file\n";
+        return 1;
+      }
+    } else break;
     ++argv; --argc;
-  } else
-    flags = 0;
+  }
 
   if (argc <= 2) {
     std::cerr << "Invalid usage. You need something like './package controller Snapmaker_Vx.y.z'\n";
@@ -61,13 +71,19 @@ int main(int argc, char const* argv[])
   *reinterpret_cast<std::uint16_t*>(header + 3) = htobe16(std::stoul(arg4));
 
   std::ostringstream sstr;
-  sstr << std::cin.rdbuf();
+  sstr << (input.is_open() ? (input) : (std::cin)).rdbuf();
   auto content = sstr.str();
   *reinterpret_cast<std::uint32_t*>(header + 40) = htole32(content.size()); // No, this does not have to be in big endian. Yes, I appreciate the consistency too...
   *reinterpret_cast<std::uint32_t*>(header + 44) = htole32(std::accumulate((std::uint8_t*)content.data(), (std::uint8_t*)content.data() + content.size(), std::uint32_t(0)));
   *reinterpret_cast<std::uint32_t*>(header + 48) = htole32(flags);
 
-  std::cout.write(header, sizeof header);
-  std::cout << content;
+  auto &out = [&]() -> std::ostream& {
+    if (output.is_open())
+      return output;
+    else
+      return std::cout;
+  }();
+  out.write(header, sizeof header);
+  out << content;
   return 0;
 }
