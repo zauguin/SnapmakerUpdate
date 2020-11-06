@@ -1,10 +1,23 @@
-#include <endian.h>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <vector>
 #include <numeric>
 #include <string_view>
+
+#if __has_include(<endian.h>)
+#include <endian.h>
+#else
+#if __has_include(<arpa/inet.h>)
+#include <arpa/inet.h>
+#elif __has_include(<winsock2.h>)
+#include <winsock2.h>
+#else
+#error "htons is not available on your system"
+#endif
+#define htobe16(x) htons(x)
+#define htole32(x) std::uint32_t(x)
+#endif
 
 using namespace std::literals;
 
