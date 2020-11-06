@@ -98,7 +98,7 @@ is written to standard output. So we run
     $TOOLS/package --flag controller Snapmaker_V3.2.2_MK1 \
       < $MARLIN/.pioenvs/GD32F105/firmware.bin > controller_new.bin.packet
 
-(you would bet exactly the same result when using
+(you would get exactly the same result when using
 
     $TOOLS/package --flag controller Snapmaker_V3.2.2_MK1 0 20 \
       < $MARLIN/.pioenvs/GD32F105/firmware.bin > controller_new.bin.packet
