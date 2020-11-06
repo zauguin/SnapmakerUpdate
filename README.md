@@ -86,16 +86,23 @@ arguments:
   * `StartID` and `EndID`: I *think* they are only relevant for module and not for
     controller firmware. Basically they define a range of CAN Ids
     (shifted by 20bit) to send the update to. In practise it is always set to
-    the pair `0 20`. (probably at least in parts because there is a missing shift
+    the pair `0 20` (probably at least in parts because there is a missing shift
     in the firmware code and therefore all components appear as id 0 in this
     test) (Should someone from Snapmaker read this: If you make your GitHub repo
-    public, I'll send you a PR to fix this)
+    public, I'll send you a PR to fix this). Given that you will almost always pass
+    `0 20`, this combination has been made the default and can be omitted.
 
 The to be wrapped firmware image is read from standard input, the wrapped image
 is written to standard output. So we run
 
+    $TOOLS/package --flag controller Snapmaker_V3.2.2_MK1 \
+      < $MARLIN/.pioenvs/GD32F105/firmware.bin > controller_new.bin.packet
+
+(you would bet exactly the same result when using
+
     $TOOLS/package --flag controller Snapmaker_V3.2.2_MK1 0 20 \
       < $MARLIN/.pioenvs/GD32F105/firmware.bin > controller_new.bin.packet
+)
 
 Now we have the wrapped fimware in `controller_new.bin.packet`.
 To wrap this in a update bundle, we again have to decide if we want to apply a

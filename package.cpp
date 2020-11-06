@@ -26,7 +26,7 @@ int main(int argc, char const* argv[])
   } else
     flags = 0;
 
-  if (argc <= 4) {
+  if (argc <= 2) {
     std::cerr << "Invalid usage. You need something like './package controller Snapmaker_Vx.y.z 0 20'\n";
     return 1;
   }
@@ -49,7 +49,13 @@ int main(int argc, char const* argv[])
     return 1;
   }
   std::copy(version.begin(), version.end(), header + 5);
-  std::string arg3 = argv[3], arg4 = argv[4];//, arg5 = argv[5];
+  std::string arg3, arg4;
+  if(argv[3]) {
+    arg3 = argv[3];
+    arg4 = argv[argv[4] ? 4 : 3];
+  } else { // Default to the numbers used in the official updates
+    arg3 = "0"; arg4 = "20";
+  }
   *reinterpret_cast<std::uint16_t*>(header + 1) = htobe16(std::stoul(arg3));
   *reinterpret_cast<std::uint16_t*>(header + 3) = htobe16(std::stoul(arg4));
 
