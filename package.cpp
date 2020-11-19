@@ -5,21 +5,29 @@
 #include <vector>
 #include <numeric>
 #include <string_view>
+#include <thread>
+#include <chrono>
 
 #include "endian-helper.h"
+#ifdef HAS_SERIAL
+#include "bootloader_interface.h"
+#endif
 
 using namespace std::literals;
 
-int main(int argc, char const* argv[])
-{
+int main(int argc, char const* argv[]) try {
   std::uint32_t flags;
   std::ifstream input;
   std::ofstream output;
+  const char *flash_interface = nullptr;
   while(argv[1]) {
     std::string_view arg = argv[1];
     if (arg == "--flag"sv)
       flags = 1;
-    else if (arg.starts_with("--input=")) {
+    else if (arg.starts_with("--flash=")) {
+      arg.remove_prefix(sizeof("--flash=")-1);
+      flash_interface = arg.data();
+    } else if (arg.starts_with("--input=")) {
       arg.remove_prefix(sizeof("--input=")-1);
       input.open(arg.data(), std::ios_base::in | std::ios_base::binary);
       if (!input.is_open()) {
@@ -77,13 +85,38 @@ int main(int argc, char const* argv[])
   *reinterpret_cast<std::uint32_t*>(header + 44) = htole32(std::accumulate((std::uint8_t*)content.data(), (std::uint8_t*)content.data() + content.size(), std::uint32_t(0)));
   *reinterpret_cast<std::uint32_t*>(header + 48) = htole32(flags);
 
-  auto &out = [&]() -> std::ostream& {
-    if (output.is_open())
-      return output;
-    else
-      return std::cout;
-  }();
-  out.write(header, sizeof header);
-  out << content;
+  if (output.is_open() || !flash_interface) {
+    auto &out = [&]() -> std::ostream& {
+      if (output.is_open())
+        return output;
+      else
+        return std::cout;
+    }();
+    out.write(header, sizeof header);
+    out << content;
+  }
+  if (flash_interface) {
+#ifdef HAS_SERIAL
+    serial::Serial serial{flash_interface, 115200, serial::Timeout::simpleTimeout(10000)};
+    for (int i = 0; i != 3; ++i) {
+      using namespace std::chrono_literals;
+      snapmaker::bootloader::keep_alive(serial);
+      std::this_thread::sleep_for(100ms);
+    }
+    snapmaker::bootloader::announce(serial, version);
+    snapmaker::bootloader::unlock_and_erase(serial);
+    {
+      snapmaker::bootloader::BlockwiseSender sender(serial);
+      sender.send_buffer(std::span{(const std::uint8_t*)header, sizeof header});
+      sender.send_buffer(std::span{(const std::uint8_t*)content.data(), content.size()});
+    }
+    snapmaker::bootloader::boot_machine(serial);
+#else
+    std::cerr << "The version has been compiled without flashing support.\n";
+#endif
+  }
   return 0;
+} catch (const char *err) {
+  std::cerr << err << '\n';
+  return 1;
 }

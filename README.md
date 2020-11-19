@@ -22,7 +22,8 @@ shell. For other platforms, the instructions should be relativly easy to adapt.
 
 You need a C++ compiler with basic support for C++20 and [libfmt](https://github.com/fmtlib/fmt)
 installed on your system to compile these tools.
-(This last requirement does not apply if your C++ compiler supports C++20 completely, especially `std::format`.)
+(`libfmt` is not needed if your C++ compiler supports C++20 completely, especially `std::format`.)
+Additionally wjwwood's serial port library [`serial`](http://wjwwood.io/serial/) must be installed if you want to support bootloader based flashing. (This can be disabled by commenting the `HAS_SERIAL` line in the Makefile.)
 
 Run `make` in the directory containing the source files from this repository to compile.
 
@@ -120,3 +121,6 @@ Here we run
 
 Now you can copy Snapmaker_FW.bin to a Snapmaker2 printer and install it like
 any other update.
+
+### Advanced usage
+Alternativly `$TOOLS/package` can be used to flash a controller image directly though the bootloader by using the `--flash=` option instead of `--output=`, passing the serial port descriptor (something like `/dev/ttyUSB0` or `COM1`). For this to work, the program has to run directly after the connected Snapmaker is powered on.
