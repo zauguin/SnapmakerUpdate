@@ -3,13 +3,16 @@
 #include <functional>
 #include "endian-helper.h"
 #include <numeric>
+#include <serial/serial.h>
 #include <vector>
 #include <array>
 #include <cassert>
 #include <chrono>
 #include <thread>
+#include <string_view>
 
 using namespace std::chrono_literals;
+using namespace std::string_view_literals;
 
 namespace snapmaker::bootloader {
 
@@ -137,4 +140,58 @@ namespace snapmaker::bootloader {
     receive_message(serial);
   }
 
+  serial::Serial trigger_bootloader(const char *path) {
+    serial::Serial serial{path, 115200, serial::Timeout::simpleTimeout(200)};
+    std::array<std::uint8_t, 2> data{0xa9, 0x04};
+    send_message(serial, data); // Compare controller version with the empty string...
+                                //Used as a way to detect if the bootloader is running
+    if (serial.read(3) == "\xAA\x55\x00"sv)
+      /* return std::move(serial); */
+      { serial.close(); return ::serial::Serial{path, 115200, serial::Timeout::simpleTimeout(10000)}; }
+
+    // bootloader does not seem to be active yet. Let's try running "M997" next.
+    serial.write("\n");
+    serial.readlines();
+    serial.write("M997\n");
+    for (int i = 10; i; --i) {
+      std::this_thread::sleep_for(100ms);
+      keep_alive(serial); // Send something ASAP
+    }
+    serial.readlines();
+
+    send_message(serial, data); // Compare controller version with the empty string...
+                                //Used as a way to detect if the bootloader is running
+    if (serial.read(3) == "\xAA\x55\x00"sv)
+      /* return std::move(serial); */
+      { serial.close(); return ::serial::Serial{path, 115200, serial::Timeout::simpleTimeout(10000)}; }
+
+    serial.close();
+    std::clog << "Please turn the Snapmaker off" << std::endl;
+    // This is ugly, but I couldn't find another way which works cross-platform
+    for(;;) {
+      try {
+        serial.open();
+        serial.close();
+      } catch(...) { break; }
+    }
+    std::this_thread::sleep_for(10s);
+    std::clog << "Please turn the Snapmaker on" << std::endl;
+    for(;;) {
+      try {
+        serial.open();
+        break;
+      } catch(...) { }
+    }
+    for (int i = 3; i; --i) {
+      std::this_thread::sleep_for(50ms);
+      keep_alive(serial); // Send something ASAP
+    }
+    send_message(serial, data); // Compare controller version with the empty string...
+                                //Used as a way to detect if the bootloader is running
+    if (serial.read(3) == "\xAA\x55\x00"sv)
+      /* return std::move(serial); */
+      { serial.close(); return ::serial::Serial{path, 115200, serial::Timeout::simpleTimeout(10000)}; }
+
+    throw "Unable to enter bootloader";
+  }
 }

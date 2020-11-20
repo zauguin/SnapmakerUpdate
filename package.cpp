@@ -97,12 +97,7 @@ int main(int argc, char const* argv[]) try {
   }
   if (flash_interface) {
 #ifdef HAS_SERIAL
-    serial::Serial serial{flash_interface, 115200, serial::Timeout::simpleTimeout(10000)};
-    for (int i = 0; i != 3; ++i) {
-      using namespace std::chrono_literals;
-      snapmaker::bootloader::keep_alive(serial);
-      std::this_thread::sleep_for(100ms);
-    }
+    auto serial = snapmaker::bootloader::trigger_bootloader(flash_interface);
     snapmaker::bootloader::announce(serial, version);
     snapmaker::bootloader::unlock_and_erase(serial);
     {

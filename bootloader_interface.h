@@ -38,4 +38,5 @@ namespace snapmaker::bootloader {
     BlockwiseSender{serial}.send_buffer(data);
   }
   void boot_machine(serial::Serial &serial);
+  serial::Serial trigger_bootloader(const char *path);
 }

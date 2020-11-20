@@ -1,2 +1,4 @@
 /package
 /update
+/bootloader_driver
+/bootloader_interface.o
